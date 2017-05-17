@@ -73,7 +73,7 @@ namespace obrotnica_v1
         {
             return Regex.Split(s, @"\W+");
         }
-
+//test
         static void prawo(string liczba, Flaga f , int i, int ilosc_torów) 
         {
             int l = Convert.ToInt16(liczba);
