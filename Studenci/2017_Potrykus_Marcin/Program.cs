@@ -1,28 +1,39 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 using System.IO;
-using obrotnica_v1a;
 using System.Text.RegularExpressions;
+using obrotnica_v1a;
 
+/* TextFile
+7
+6
+#
+1 2 3 4 5
+6
 
+7 8 9
+10
+14
+15 16
+#
+11
+12
+13
+#
+r 3
+l 10
+i 1
+r 3
+o 2
+*/
 namespace obrotnica_v1
-{
-    
+{    
     class Program
     { 
-        static void WyświetlListe(Lista l)
+        static void DodajNaKoncu(Lista l, string wartosc)
         {
-            Console.WriteLine("{0} ", l.wartosc);
-            if (l.next != null)
-            {
-                WyświetlListe(l.next);
-            }
-        }
-
-        static void DodajNaKońcu(Lista l, string wartosc)
-        {
-            if (l.next != null)  DodajNaKońcu(l.next, wartosc);
+            if (l.next != null)  DodajNaKoncu(l.next, wartosc);
             
             else
             {
@@ -50,15 +61,10 @@ namespace obrotnica_v1
 
                     else
                     {
-                        if      (licz == 0) DodajNaKońcu(dane, line);
-                        else if (licz == 1) 
-                        { 
-                            //Console.Write(line.Length);
-                            DodajNaKońcu(tory, line);                            
-
-                        }
-                        else if (licz == 2) DodajNaKońcu(obrotnica, line);
-                        else DodajNaKońcu(rozkazy, line);  
+                        if      (licz == 0) DodajNaKoncu(dane, line);
+                        else if (licz == 1) DodajNaKoncu(tory, line);
+                        else if (licz == 2) DodajNaKoncu(obrotnica, line);
+                        else DodajNaKoncu(rozkazy, line);  
                     }
                 }
             }
@@ -69,144 +75,127 @@ namespace obrotnica_v1
             }
         }
 
-        static string[] SplitWords(string s)
+        //rozdziel zoptymalizowane
+        static string[] Rozdziel(string wyraz)
         {
-            return Regex.Split(s, @"\W+");
-        }
-//test
-        static void prawo(string liczba, Flaga f , int i, int ilosc_torów) 
-        {
-            int l = Convert.ToInt16(liczba);
-            int licz2 = l % ilosc_torów;
-            Console.WriteLine("licz2 " + licz2);
-            //if (licz2 >0)
-            //{
-                int licz = f.fl - l;
-                Console.WriteLine("prawo\t" + l + "flaga\t" + i + "licz\t" + licz);
-
-                if (licz < 0)
-                {
-                    int aa = ilosc_torów + licz;
-                    Console.WriteLine("FLAGA " + aa);
-                    f.fl = aa;
-                }
-            //}         
+            return Regex.Split(wyraz, @"\W+");
         }
 
-        static void lewo(string liczba, Flaga f , int i, int ilosc_torów)
-        {
-            int l = Convert.ToInt16(liczba);
-            int licz2 = l % ilosc_torów;
-            Console.WriteLine("lewo\t" + l + " flaga\t" + i + " licz\t" + licz2);
-            if (licz2 > 1)
-            {
-                int licz = f.fl - licz2; //Console.WriteLine("licz " + licz);
-                if (licz < 0)
-                {                    
-                    int aa = 0 - licz;
-                    Console.WriteLine("FLAGA " + aa);
-                    f.fl = aa;
-                }
-            }
-            else 
-            {
-                int licz = f.fl - l; 
-                Console.WriteLine("licz  l2 " + licz);
-                if (licz < 0) 
-                {
-                    int aa = 0 - licz;
-                    Console.WriteLine("FLAGA " + aa);
-                    f.fl = aa;
-                }
-            }
-        }
-
-        static void pobierz(string liczba) 
-        { 
+        //lewo zoptymalizowane
+        static void lewo(string liczba, Flaga f , int ilosc_torów) 
+        {   
+            int licz = Convert.ToInt16(liczba) % ilosc_torów;
             
-            Console.WriteLine("pobierz\t"+liczba); 
+            if ((f.fl + licz) > ilosc_torów) f.fl = ilosc_torów - (ilosc_torów - licz + 1);
+            else  f.fl += licz;
         }
 
-        static void wydaj(string liczba) 
-        { Console.WriteLine("wydaj\t" + liczba); 
+        //prawo zoptymalizowane
+        static void prawo(string liczba, Flaga f , int ilosc_torów)
+        { 
+            int licz = Convert.ToInt16(liczba) % ilosc_torów;
+            
+            if ((f.fl - licz) < 0) f.fl = 1+(ilosc_torów - licz);
+            else f.fl -= licz;                     
         }
-
-        static void rozkazywanie(Lista r, int ilosc_torów)
+    
+        static void pobierz(Lista obrotnica, Lista3 tablica, string liczba, string obrotnica_max) 
         {
-            Flaga flaga = new Flaga();
+            int a=0;                       
+            if ((obrotnica.Dlugosc - 1) > Convert.ToInt16(obrotnica_max)) Console.WriteLine("Nie mozna więcej pobrać");
+            else
+            {         
+                if (tablica.dlugosc > Convert.ToInt16(liczba)) a = Convert.ToInt16(liczba);
+                else a = tablica.dlugosc;
+                
+                for (int i = 0; i < a; i++)
+                {
+                    string dodaj = tablica.head.value;
+                    DodajNaKoncu(obrotnica, dodaj);
+                    tablica.usunGlowe();                    
+                }
+            }   
+        }
+
+        static void wydaj(Lista obrotnica, Lista3 tablica, string liczba, string obrotnica_max) 
+        {
+            int a = 0;
+            if (obrotnica.Dlugosc-1 > Convert.ToInt16(liczba)) a=Convert.ToInt16(liczba);
+            else a = obrotnica.Dlugosc-1;
+            for (int i = 0; i < a; i++)
+            {
+                string dodaj = obrotnica.next.wartosc;
+                tablica.dodaj(new Wagon(dodaj));
+                UsuńPrzód(ref obrotnica);
+            }            
+        }
+
+        static void rozkazywanie(Lista r, Lista d, Lista ob, Lista t)
+        {            
+            Flaga flaga = new Flaga();            
             flaga.fl = 0;
-            Console.Write("flaga "+flaga.fl); 
-
-
-            int dlugosc=r.Dlugosc-1;
+            Lista3[] toryw = new Lista3[Convert.ToInt16(d.next.wartosc)];
+            int dlugosc = r.Dlugosc-1;
             string [] symbol=new string[r.Dlugosc];
             string [] liczba=new string[r.Dlugosc];
-            for (int i = 0; i < dlugosc;i++)
+
+            for (int i = 0; i < dlugosc; i++)//rozdziel rozkazy
             { 
-                string [] a = SplitWords(r.next.wartosc);
+                string [] a = Rozdziel(r.next.wartosc);
                 symbol[i] = a[0]; 
                 liczba[i] = a[1];
                 UsuńPrzód(ref r);
             }
-            Console.WriteLine("");
-            for (int i = 0; i < dlugosc;i++)
+                       
+            for (int ii = 0; ii < Convert.ToInt16(d.next.wartosc); ii++)    //generuj tory
             {
-                //rozkazuj
-                if (symbol[i] == "r") { prawo(liczba[i], flaga, flaga.fl, ilosc_torów); }
-                else if (symbol[i] == "l") { lewo(liczba[i],flaga, flaga.fl, ilosc_torów); }
-                else if (symbol[i] == "i") { pobierz(liczba[i]); }
-                else wydaj(liczba[i]);                
-            } Console.WriteLine("");
-        }
+                toryw[ii] = new Lista3();
+                string[] ww = Rozdziel(t.next.wartosc);
+                for (int w = 0; w < ww.Length; w++) //generuj wagony
+                {
+                    toryw[ii].dodaj(new Wagon(ww[w]));
+                }
+                UsuńPrzód(ref t);
+            }
+            Console.WriteLine("");                                                                    
+            for (int ii = 0; ii < Convert.ToInt16(d.next.wartosc); ii++) { Console.WriteLine("Tor " + (ii+1 ) + "\t<{0}", toryw[ii] + ">"); }
+            Console.WriteLine("Obrotnica <{0}>\n",ob);
 
+
+            for (int i = 0; i < dlugosc; i++)//wydaj rozkaz
+            {
+                if (symbol[i] == "r") { prawo(liczba[i], flaga, (Convert.ToInt16(d.next.wartosc) - 1)    ); }
+                else if (symbol[i] == "l") { lewo(liczba[i], flaga, (Convert.ToInt16(d.next.wartosc) - 1)); }
+                else if (symbol[i] == "i")
+                {
+                    pobierz(ob, toryw[flaga.fl], liczba[i], d.next.next.wartosc);
+                    Console.WriteLine("-------------------------------------------------------");
+                    for (int ii = 0; ii < Convert.ToInt16(d.next.wartosc); ii++) { Console.WriteLine("Tor " + (ii + 1) + "\t<{0}", toryw[ii] + ">"); }
+                    Console.WriteLine("obrotnica <{0}>\n", ob);
+                }
+                else
+                {
+                    wydaj(ob, toryw[flaga.fl], liczba[i], d.next.next.wartosc);
+                    Console.WriteLine("-------------------------------------------------------");
+                    for (int ii = 0; ii < Convert.ToInt16(d.next.wartosc); ii++) { Console.WriteLine("Tor " + (ii + 1) + "\t<{0}", toryw[ii] + ">"); }
+                    Console.WriteLine("obrotnica <{0}>\n", ob);
+                }
+            }
+        }
+       
         static void Main(string[] args)
         {
             Lista dane = new Lista();
             Lista tory = new Lista();
             Lista obrotnica = new Lista();
             Lista rozkazy = new Lista();
-
-           
-            
+            Console.WriteLine(" OBROTNICA");                       
             inicjacja(dane, tory, obrotnica, rozkazy);            
             
-            Console.WriteLine("dane\t\t<{0}>\t Dlugość<{1}>", dane.ToString(), dane.Dlugosc-1);
-            //Console.WriteLine("tory\t\t<{0}>\t Dlugość<{1}>", tory.ToString(), tory.Dlugosc-1);            
-            Console.WriteLine("obrotnica\t<{0}>\t Dlugość<{1}>", obrotnica.ToString(),obrotnica.Dlugosc-1);
-            //Console.WriteLine("rozkazy\t\t<{0}\t Dlugość<{1}>>", rozkazy.ToString(),rozkazy.Dlugosc-1);          
-            Console.WriteLine("\nROZKAZY");
-            
-
-            //SimpleStruct ss = new SimpleStruct();
-            //ss.X = 500;
-            //ss.DisplayX();
-             int ilosc_torów = Convert.ToInt16(dane.next.wartosc)-1;
-            Console.WriteLine("ilosc torów" + ilosc_torów);           
-            rozkazywanie(rozkazy, ilosc_torów); 
-             
-            Lista3[] toryw = new Lista3[10];           
-            //generuj tory
-            for (int ii = 0; ii < ilosc_torów; ii++)
-            {
-                toryw[ii] = new Lista3();
-                string[] ww = SplitWords(tory.next.wartosc);  
-                //generuj wagony
-                for (int w = 0; w < ww.Length; w++)
-                {
-                    toryw[ii].dodaj(new Wagon(ww[w]));
-                }
-                UsuńPrzód(ref tory);
-            }
-            //wypisz stan torów
-            for (int ii = 0; ii < ilosc_torów; ii++) { Console.WriteLine("Tor " + (ii+1) + "\t<{0}", toryw[ii]+">"); }
-            
-
-            
-
-
-
-
-           Console.ReadKey();
+            //rozkazy
+            rozkazywanie(rozkazy, dane, obrotnica, tory);
+        
+            Console.ReadKey();
         }
     }
 }
