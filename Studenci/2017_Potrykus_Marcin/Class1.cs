@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 
-namespace obrotnica_v1a
+namespace ob
 {
     class Lista
     {
