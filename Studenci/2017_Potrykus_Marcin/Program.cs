@@ -1,11 +1,4 @@
-using System;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Text.RegularExpressions;
-using obrotnica_v1a;
-
-/* TextFile
+/* w debug/bin -> TextFile.txt
 7
 6
 #
@@ -27,7 +20,16 @@ i 1
 r 3
 o 2
 */
-namespace obrotnica_v1
+
+using System;
+using System.Linq;
+using System.Text;
+using System.IO;
+using ob;
+using System.Text.RegularExpressions;
+
+
+namespace obrotnica_v_2_0
 {    
     class Program
     { 
@@ -47,7 +49,7 @@ namespace obrotnica_v1
             l = l.next;
         }
 
-        static void inicjacja(Lista dane, Lista tory,   Lista obrotnica, Lista rozkazy)
+        static void inicjacja(Lista dane, Lista tory,   Lista3 obrotnica, Lista rozkazy)
         {
             int licz = 0;
             try
@@ -63,7 +65,7 @@ namespace obrotnica_v1
                     {
                         if      (licz == 0) DodajNaKoncu(dane, line);
                         else if (licz == 1) DodajNaKoncu(tory, line);
-                        else if (licz == 2) DodajNaKoncu(obrotnica, line);
+                        else if (licz == 2) obrotnica.dodaj(new Wagon(line));
                         else DodajNaKoncu(rozkazy, line);  
                     }
                 }
@@ -75,14 +77,12 @@ namespace obrotnica_v1
             }
         }
 
-        //rozdziel zoptymalizowane
         static string[] Rozdziel(string wyraz)
         {
             return Regex.Split(wyraz, @"\W+");
         }
 
-        //lewo zoptymalizowane
-        static void lewo(string liczba, Flaga f , int ilosc_torów) 
+        static void lewo(string liczba, Flaga f , int ilosc_torów)  //obroty lewo
         {   
             int licz = Convert.ToInt16(liczba) % ilosc_torów;
             
@@ -90,8 +90,7 @@ namespace obrotnica_v1
             else  f.fl += licz;
         }
 
-        //prawo zoptymalizowane
-        static void prawo(string liczba, Flaga f , int ilosc_torów)
+        static void prawo(string liczba, Flaga f, int ilosc_torów) //obroty w prawo
         { 
             int licz = Convert.ToInt16(liczba) % ilosc_torów;
             
@@ -99,10 +98,10 @@ namespace obrotnica_v1
             else f.fl -= licz;                     
         }
     
-        static void pobierz(Lista obrotnica, Lista3 tablica, string liczba, string obrotnica_max) 
+        static void pobierz(Lista3 obrotnica, Lista3 tablica, string liczba, string obrotnica_max) 
         {
             int a=0;                       
-            if ((obrotnica.Dlugosc - 1) > Convert.ToInt16(obrotnica_max)) Console.WriteLine("Nie mozna więcej pobrać");
+            if ((obrotnica.dlugosc - 1) > Convert.ToInt16(obrotnica_max)) Console.WriteLine("Nie mozna więcej pobrać");
             else
             {         
                 if (tablica.dlugosc > Convert.ToInt16(liczba)) a = Convert.ToInt16(liczba);
@@ -111,26 +110,26 @@ namespace obrotnica_v1
                 for (int i = 0; i < a; i++)
                 {
                     string dodaj = tablica.head.value;
-                    DodajNaKoncu(obrotnica, dodaj);
+                    obrotnica.dodaj(new Wagon(dodaj));
                     tablica.usunGlowe();                    
                 }
             }   
         }
 
-        static void wydaj(Lista obrotnica, Lista3 tablica, string liczba, string obrotnica_max) 
+        static void wydaj(Lista3 obrotnica, Lista3 tablica, string liczba, string obrotnica_max) 
         {
             int a = 0;
-            if (obrotnica.Dlugosc-1 > Convert.ToInt16(liczba)) a=Convert.ToInt16(liczba);
-            else a = obrotnica.Dlugosc-1;
+            if (obrotnica.dlugosc-1 > Convert.ToInt16(liczba)) a=Convert.ToInt16(liczba);
+            else a = obrotnica.dlugosc-1;
             for (int i = 0; i < a; i++)
             {
-                string dodaj = obrotnica.next.wartosc;
+                string dodaj = obrotnica.head.value;
                 tablica.dodaj(new Wagon(dodaj));
-                UsuńPrzód(ref obrotnica);
+                obrotnica.usunGlowe();
             }            
         }
 
-        static void rozkazywanie(Lista r, Lista d, Lista ob, Lista t)
+        static void rozkazywanie(Lista r, Lista d, Lista3 ob, Lista t)
         {            
             Flaga flaga = new Flaga();            
             flaga.fl = 0;
@@ -187,12 +186,12 @@ namespace obrotnica_v1
         {
             Lista dane = new Lista();
             Lista tory = new Lista();
-            Lista obrotnica = new Lista();
+            Lista3 obrotnica = new Lista3();
             Lista rozkazy = new Lista();
-            Console.WriteLine(" OBROTNICA");                       
-            inicjacja(dane, tory, obrotnica, rozkazy);            
+
+            Console.WriteLine("OBROTNICA 2.0");                       
             
-            //rozkazy
+            inicjacja(dane, tory, obrotnica, rozkazy);            
             rozkazywanie(rozkazy, dane, obrotnica, tory);
         
             Console.ReadKey();
